@@ -164,7 +164,8 @@ pub fn entry_point() {
     const CURRENT_OPENXR_VERSION: xr::Version = xr::Version::new(1, 1, 36);
 
     // Using a provisional platform, before we can get the runtime info
-    let (loader_suffix, openxr_version) = match alvr_system_info::platform(None, None) {
+    let provisional_platform = alvr_system_info::platform(None, None);
+    let (loader_suffix, openxr_version) = match provisional_platform {
         Platform::Quest1 => ("_quest1", LEGACY_OPENXR_VERSION),
         Platform::PicoNeo3
         | Platform::PicoG3
@@ -173,6 +174,7 @@ pub fn entry_point() {
         | Platform::Pico4Enterprise => ("_pico_old", LEGACY_OPENXR_VERSION),
         p if p.is_vive() => ("", LEGACY_OPENXR_VERSION),
         p if p.is_yvr() => ("_yvr", LEGACY_OPENXR_VERSION),
+        Platform::ThinkRealityVRX => ("", LEGACY_OPENXR_VERSION),
         _ => ("", CURRENT_OPENXR_VERSION),
     };
     let xr_entry = unsafe {
@@ -182,7 +184,16 @@ pub fn entry_point() {
     #[cfg(target_os = "android")]
     xr_entry.initialize_android_loader().unwrap();
 
-    let available_exts = xr_entry.enumerate_extensions().unwrap();
+    let mut available_exts = xr_entry.enumerate_extensions().unwrap();
+    if provisional_platform == Platform::ThinkRealityVRX {
+        // QXR advertises these extensions but returns null function pointers for them.
+        available_exts.fb_swapchain_update_state = false;
+        available_exts.fb_display_refresh_rate = false;
+        available_exts.fb_foveation = false;
+        available_exts.fb_foveation_configuration = false;
+        available_exts.fb_composition_layer_settings = false;
+        available_exts.ext_eye_gaze_interaction = false;
+    }
     info!(
         "OpenXR available extensions: {:#?}",
         available_exts
@@ -528,13 +539,13 @@ pub fn entry_point() {
                         amplitude,
                     } => {
                         let idx = if device_id == *HAND_LEFT_ID { 0 } else { 1 };
-                        let action =
-                            &interaction_context.read().hands_interaction[idx].vibration_action;
+                        let hand = &interaction_context.read().hands_interaction[idx];
+                        let action = &hand.vibration_action;
 
                         action
                             .apply_feedback(
                                 &xr_session,
-                                xr::Path::NULL,
+                                hand.subaction_path,
                                 &xr::HapticVibration::new()
                                     .amplitude(amplitude.clamp(0.0, 1.0))
                                     .frequency(frequency.max(0.0))

@@ -662,8 +662,11 @@ fn stream_input_loop(
             body,
         });
 
-        let button_entries =
-            interaction::update_buttons(&xr_session, &interaction_ctx.read().button_actions);
+        let button_entries = interaction::update_buttons(
+            &xr_session,
+            &interaction_ctx.read().button_actions,
+            &interaction_ctx.read().button_subaction_paths,
+        );
         if !button_entries.is_empty() {
             core_ctx.send_buttons(button_entries);
         }

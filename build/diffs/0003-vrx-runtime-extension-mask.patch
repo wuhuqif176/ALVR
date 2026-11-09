@@ -1,0 +1,68 @@
+diff --git a/alvr/client_openxr/src/lib.rs b/alvr/client_openxr/src/lib.rs
+index 7870483e..b9507299 100644
+--- a/alvr/client_openxr/src/lib.rs
++++ b/alvr/client_openxr/src/lib.rs
+@@ -164,7 +164,8 @@ pub fn entry_point() {
+     const CURRENT_OPENXR_VERSION: xr::Version = xr::Version::new(1, 1, 36);
+ 
+     // Using a provisional platform, before we can get the runtime info
+-    let (loader_suffix, openxr_version) = match alvr_system_info::platform(None, None) {
++    let provisional_platform = alvr_system_info::platform(None, None);
++    let (loader_suffix, openxr_version) = match provisional_platform {
+         Platform::Quest1 => ("_quest1", LEGACY_OPENXR_VERSION),
+         Platform::PicoNeo3
+         | Platform::PicoG3
+@@ -173,6 +174,7 @@ pub fn entry_point() {
+         | Platform::Pico4Enterprise => ("_pico_old", LEGACY_OPENXR_VERSION),
+         p if p.is_vive() => ("", LEGACY_OPENXR_VERSION),
+         p if p.is_yvr() => ("_yvr", LEGACY_OPENXR_VERSION),
++        Platform::ThinkRealityVRX => ("", LEGACY_OPENXR_VERSION),
+         _ => ("", CURRENT_OPENXR_VERSION),
+     };
+     let xr_entry = unsafe {
+@@ -182,7 +184,16 @@ pub fn entry_point() {
+     #[cfg(target_os = "android")]
+     xr_entry.initialize_android_loader().unwrap();
+ 
+-    let available_exts = xr_entry.enumerate_extensions().unwrap();
++    let mut available_exts = xr_entry.enumerate_extensions().unwrap();
++    if provisional_platform == Platform::ThinkRealityVRX {
++        // QXR advertises these extensions but returns null function pointers for them.
++        available_exts.fb_swapchain_update_state = false;
++        available_exts.fb_display_refresh_rate = false;
++        available_exts.fb_foveation = false;
++        available_exts.fb_foveation_configuration = false;
++        available_exts.fb_composition_layer_settings = false;
++        available_exts.ext_eye_gaze_interaction = false;
++    }
+     info!(
+         "OpenXR available extensions: {:#?}",
+         available_exts
+diff --git a/alvr/system_info/src/lib.rs b/alvr/system_info/src/lib.rs
+index dbece9ff..7aad2deb 100644
+--- a/alvr/system_info/src/lib.rs
++++ b/alvr/system_info/src/lib.rs
+@@ -35,6 +35,7 @@ pub enum Platform {
+     Yvr,
+     PlayForDreamMR,
+     SamsungGalaxyXR,
++    ThinkRealityVRX,
+     AndroidUnknown,
+     VisionOSHeadset,
+     WindowsPc,
+@@ -104,6 +105,7 @@ impl Display for Platform {
+             Self::Yvr => "YVR",
+             Self::PlayForDreamMR => "Play For Dream MR",
+             Self::SamsungGalaxyXR => "Samsung Galaxy XR",
++            Self::ThinkRealityVRX => "Lenovo ThinkReality VRX",
+             Self::AndroidUnknown => "Android (unknown)",
+             Self::VisionOSHeadset => "visionOS Headset",
+             Self::WindowsPc => "Windows PC",
+@@ -158,6 +160,7 @@ pub fn platform(runtime_name: Option<String>, runtime_version: Option<u64>) -> P
+             ("YVR", _, _, _) => Platform::Yvr,
+             ("Play For Dream", _, _, _) => Platform::PlayForDreamMR,
+             ("samsung", _, "xrvst2", _) => Platform::SamsungGalaxyXR,
++            ("Lenovo", "VRX", _, _) => Platform::ThinkRealityVRX,
+             _ => Platform::AndroidUnknown,
+         }
+     }

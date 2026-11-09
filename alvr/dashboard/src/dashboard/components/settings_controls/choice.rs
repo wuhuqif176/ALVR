@@ -10,7 +10,7 @@ use serde_json as json;
 use std::collections::HashMap;
 
 fn get_display_name(id: &str, strings: &HashMap<String, String>) -> String {
-    strings.get("display_name").cloned().unwrap_or_else(|| {
+    let display = strings.get("display_name").cloned().unwrap_or_else(|| {
         let mut chars = id.chars();
 
         let mut new_chars = vec![chars.next().unwrap()];
@@ -25,7 +25,8 @@ fn get_display_name(id: &str, strings: &HashMap<String, String>) -> String {
         }
 
         new_chars.into_iter().collect::<String>()
-    })
+    });
+    alvr_gui_common::zh_cn::text(&display)
 }
 
 pub struct Control {
@@ -148,7 +149,7 @@ impl Control {
                     self.variant_labels.len() + 1,
                     |idx| {
                         if idx == 0 {
-                            "Preset not applied".into()
+                            "当前设置未匹配预设".into()
                         } else {
                             self.variant_labels[idx - 1].display.clone()
                         }

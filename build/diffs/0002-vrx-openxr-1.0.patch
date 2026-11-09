@@ -1,0 +1,40 @@
+diff --git a/alvr/client_openxr/src/lib.rs b/alvr/client_openxr/src/lib.rs
+index 7870483e..cac356c2 100644
+--- a/alvr/client_openxr/src/lib.rs
++++ b/alvr/client_openxr/src/lib.rs
+@@ -173,6 +173,7 @@ pub fn entry_point() {
+         | Platform::Pico4Enterprise => ("_pico_old", LEGACY_OPENXR_VERSION),
+         p if p.is_vive() => ("", LEGACY_OPENXR_VERSION),
+         p if p.is_yvr() => ("_yvr", LEGACY_OPENXR_VERSION),
++        Platform::ThinkRealityVRX => ("", LEGACY_OPENXR_VERSION),
+         _ => ("", CURRENT_OPENXR_VERSION),
+     };
+     let xr_entry = unsafe {
+diff --git a/alvr/system_info/src/lib.rs b/alvr/system_info/src/lib.rs
+index dbece9ff..7aad2deb 100644
+--- a/alvr/system_info/src/lib.rs
++++ b/alvr/system_info/src/lib.rs
+@@ -35,6 +35,7 @@ pub enum Platform {
+     Yvr,
+     PlayForDreamMR,
+     SamsungGalaxyXR,
++    ThinkRealityVRX,
+     AndroidUnknown,
+     VisionOSHeadset,
+     WindowsPc,
+@@ -104,6 +105,7 @@ impl Display for Platform {
+             Self::Yvr => "YVR",
+             Self::PlayForDreamMR => "Play For Dream MR",
+             Self::SamsungGalaxyXR => "Samsung Galaxy XR",
++            Self::ThinkRealityVRX => "Lenovo ThinkReality VRX",
+             Self::AndroidUnknown => "Android (unknown)",
+             Self::VisionOSHeadset => "visionOS Headset",
+             Self::WindowsPc => "Windows PC",
+@@ -158,6 +160,7 @@ pub fn platform(runtime_name: Option<String>, runtime_version: Option<u64>) -> P
+             ("YVR", _, _, _) => Platform::Yvr,
+             ("Play For Dream", _, _, _) => Platform::PlayForDreamMR,
+             ("samsung", _, "xrvst2", _) => Platform::SamsungGalaxyXR,
++            ("Lenovo", "VRX", _, _) => Platform::ThinkRealityVRX,
+             _ => Platform::AndroidUnknown,
+         }
+     }

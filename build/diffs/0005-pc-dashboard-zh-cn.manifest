@@ -1,0 +1,31 @@
+PC Dashboard Simplified Chinese localization
+
+Patch:
+  0005-pc-dashboard-zh-cn.patch
+  SHA256: 2C49F6FA247E112ED346D2B3F3CCEA0441A942356EA4674DDC264B0C0B72123E
+  Size: 121584 bytes
+
+Source diff:
+  873 insertions
+  205 deletions
+
+Files:
+  alvr/dashboard/src/dashboard/components/*
+  alvr/dashboard/src/dashboard/components/settings_controls/*
+  alvr/dashboard/src/dashboard/mod.rs
+  alvr/dashboard/src/main.rs
+  alvr/gui_common/src/basic_components/modal.rs
+  alvr/gui_common/src/lib.rs
+  alvr/gui_common/src/theme.rs
+  alvr/gui_common/src/zh_cn.rs
+
+Binary asset:
+  alvr/gui_common/resources/NotoSansCJKsc-Regular.otf
+  Size: 16437364 bytes
+  SHA256: 2C76254F6FC379FDDFCE0A7E84FB5385BB135D3E399294F6EEB6680D0365B74B
+
+Purpose:
+  Localize the Dashboard navigation, settings, statistics, setup wizard, notifications, and common dialogs into Simplified Chinese. Register Noto Sans CJK SC with egui so Chinese text renders instead of tofu boxes.
+
+Build:
+  cargo xtask build-streamer

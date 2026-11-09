@@ -1,0 +1,15 @@
+OpenXR hand subaction paths
+
+Files:
+  alvr/client_openxr/src/interaction.rs
+  alvr/client_openxr/src/stream.rs
+  alvr/client_openxr/src/lib.rs
+
+Purpose:
+  Declare each hand action with its /user/hand/{left,right} subaction path and use that path for action state, spaces, buttons, and haptics. This removes the XR_ERROR_PATH_UNSUPPORTED loop emitted by QXR when ALVR queried hand actions with XR_NULL_PATH.
+
+Build:
+  cargo xtask build-client
+
+Packaged APK SHA256:
+  4063AEF5436317D570E18B6B038E810CED95E09523028E8C3165078F04109C34

@@ -51,6 +51,21 @@ pub mod graph_colors {
 }
 
 pub fn set_theme(ctx: &Context) {
+    let mut fonts = egui::FontDefinitions::default();
+    fonts.font_data.insert(
+        "noto_cjk".into(),
+        egui::FontData::from_static(include_bytes!("../resources/NotoSansCJKsc-Regular.otf"))
+            .into(),
+    );
+    for family in [egui::FontFamily::Proportional, egui::FontFamily::Monospace] {
+        fonts
+            .families
+            .entry(family)
+            .or_default()
+            .push("noto_cjk".into());
+    }
+    ctx.set_fonts(fonts);
+
     ctx.set_theme(ThemePreference::Dark);
 
     let mut style = (*ctx.global_style()).clone();

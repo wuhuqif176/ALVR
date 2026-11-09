@@ -1,0 +1,15 @@
+VR client loader replacement
+
+Target: deps/android_openxr/arm64-v8a/libopenxr_loader.so
+
+Old: Khronos OpenXR loader for Android 1.1.36
+Size: 1583672 bytes
+SHA256: 6B9AEB6EA2E429BAE91328CC85B0E19947CC77CA2F4948A763A4A41C23511DD6
+
+New: Qualcomm Snapdragon Spaces 1.0.4 OpenXR loader
+Source: E:\vrx\spaces_sdk\unity_android\libopenxr_loader\x\jni\arm64-v8a\libopenxr_loader.so
+Size: 14965232 bytes
+SHA256: E75C8D60F1F9BD132EDAF55988519B0A3E6DD97F670AB4B8208ED9D4DDA92053
+
+Packaged APK SHA256 (loader-only build): D902D811827D49130440A5D05DF7163B37E70D34AF50199796F551669212934D
+Packaged APK SHA256 (OpenXR 1.0 negotiation build): 8DB2010493FB81058E75464A5C06463E4A4A66E61913FB4C73A45DEF6ADD9A10

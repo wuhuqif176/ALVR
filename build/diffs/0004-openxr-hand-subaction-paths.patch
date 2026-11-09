@@ -1,0 +1,232 @@
+diff --git a/alvr/client_openxr/src/interaction.rs b/alvr/client_openxr/src/interaction.rs
+index af4ecc56..cb03a686 100644
+--- a/alvr/client_openxr/src/interaction.rs
++++ b/alvr/client_openxr/src/interaction.rs
+@@ -99,6 +99,7 @@ pub struct HandInteraction {
+     pub controllers_profile_id: u64,
+     pub input_ids: HashSet<u64>,
+     pub pose_offset: Pose,
++    pub subaction_path: xr::Path,
+ 
+     pub grip_action: xr::Action<xr::Posef>,
+     pub grip_space: xr::Space,
+@@ -180,6 +181,7 @@ pub struct InteractionContext {
+     platform: Platform,
+     pub action_set: xr::ActionSet,
+     pub button_actions: HashMap<u64, ButtonAction>,
++    pub button_subaction_paths: [xr::Path; 2],
+     pub hands_interaction: [HandInteraction; 2],
+     multimodal_handle: Option<MultimodalMeta>,
+     pub multimodal_hands_enabled: bool,
+@@ -200,6 +202,10 @@ impl InteractionContext {
+             .create_action_set("alvr_interaction", "ALVR interaction", 0)
+             .unwrap();
+ 
++        let left_hand_subaction_path = xr_instance.string_to_path(HAND_LEFT_PATH).unwrap();
++        let right_hand_subaction_path = xr_instance.string_to_path(HAND_RIGHT_PATH).unwrap();
++        let button_subaction_paths = [left_hand_subaction_path, right_hand_subaction_path];
++
+         let mut bindings = vec![];
+ 
+         fn binding<'a, T: xr::ActionTy>(action: &'a xr::Action<T>, path: &str) -> xr::Binding<'a> {
+@@ -238,37 +244,70 @@ impl InteractionContext {
+                 name[0..1].to_uppercase(),
+                 name[1..].replace('_', " ")
+             );
++            let subaction_path = if info.device_id == *HAND_RIGHT_ID {
++                right_hand_subaction_path
++            } else {
++                left_hand_subaction_path
++            };
+ 
+             let action = match info.button_type {
+                 ButtonType::Binary => ButtonAction::Binary(
+-                    action_set.create_action(&name, &display_name, &[]).unwrap(),
++                    action_set
++                        .create_action(&name, &display_name, &[subaction_path])
++                        .unwrap(),
+                 ),
+                 ButtonType::Scalar => ButtonAction::Scalar(
+-                    action_set.create_action(&name, &display_name, &[]).unwrap(),
++                    action_set
++                        .create_action(&name, &display_name, &[subaction_path])
++                        .unwrap(),
+                 ),
+             };
+             button_actions.insert(*button_id, action);
+         }
+ 
+         let left_grip_action = action_set
+-            .create_action("left_grip_pose", "Left grip pose", &[])
++            .create_action(
++                "left_grip_pose",
++                "Left grip pose",
++                &[left_hand_subaction_path],
++            )
+             .unwrap();
+         let right_grip_action = action_set
+-            .create_action("right_grip_pose", "Right grip pose", &[])
++            .create_action(
++                "right_grip_pose",
++                "Right grip pose",
++                &[right_hand_subaction_path],
++            )
+             .unwrap();
+ 
+         let left_aim_action = action_set
+-            .create_action("left_aim_pose", "Left aim pose", &[])
++            .create_action(
++                "left_aim_pose",
++                "Left aim pose",
++                &[left_hand_subaction_path],
++            )
+             .unwrap();
+         let right_aim_action = action_set
+-            .create_action("right_aim_pose", "Right aim pose", &[])
++            .create_action(
++                "right_aim_pose",
++                "Right aim pose",
++                &[right_hand_subaction_path],
++            )
+             .unwrap();
+ 
+         let left_vibration_action = action_set
+-            .create_action("left_hand_vibration", "Left hand vibration", &[])
++            .create_action(
++                "left_hand_vibration",
++                "Left hand vibration",
++                &[left_hand_subaction_path],
++            )
+             .unwrap();
+         let right_vibration_action = action_set
+-            .create_action("right_hand_vibration", "Right hand vibration", &[])
++            .create_action(
++                "right_hand_vibration",
++                "Right hand vibration",
++                &[right_hand_subaction_path],
++            )
+             .unwrap();
+ 
+         // Create action bindings:
+@@ -360,17 +399,17 @@ impl InteractionContext {
+             .unwrap();
+ 
+         let left_grip_space = left_grip_action
+-            .create_space(&xr_session, xr::Path::NULL, xr::Posef::IDENTITY)
++            .create_space(&xr_session, left_hand_subaction_path, xr::Posef::IDENTITY)
+             .unwrap();
+         let right_grip_space = right_grip_action
+-            .create_space(&xr_session, xr::Path::NULL, xr::Posef::IDENTITY)
++            .create_space(&xr_session, right_hand_subaction_path, xr::Posef::IDENTITY)
+             .unwrap();
+ 
+         let left_aim_space = left_aim_action
+-            .create_space(&xr_session, xr::Path::NULL, xr::Posef::IDENTITY)
++            .create_space(&xr_session, left_hand_subaction_path, xr::Posef::IDENTITY)
+             .unwrap();
+         let right_aim_space = right_aim_action
+-            .create_space(&xr_session, xr::Path::NULL, xr::Posef::IDENTITY)
++            .create_space(&xr_session, right_hand_subaction_path, xr::Posef::IDENTITY)
+             .unwrap();
+ 
+         let left_detached_grip_space = left_detached_grip_action.as_ref().map(|action| {
+@@ -451,11 +490,13 @@ impl InteractionContext {
+             platform,
+             action_set,
+             button_actions,
++            button_subaction_paths,
+             hands_interaction: [
+                 HandInteraction {
+                     controllers_profile_id,
+                     input_ids: button_set.clone(),
+                     pose_offset: get_controller_offset(platform, false),
++                    subaction_path: left_hand_subaction_path,
+                     grip_action: left_grip_action,
+                     grip_space: left_grip_space,
+                     aim_action: left_aim_action,
+@@ -469,6 +510,7 @@ impl InteractionContext {
+                     controllers_profile_id,
+                     input_ids: button_set,
+                     pose_offset: get_controller_offset(platform, true),
++                    subaction_path: right_hand_subaction_path,
+                     grip_action: right_grip_action,
+                     grip_space: right_grip_space,
+                     aim_action: right_aim_action,
+@@ -786,7 +828,7 @@ pub fn get_hand_data(
+ 
+     let grip_motion = if hand_source
+         .grip_action
+-        .is_active(xr_session, xr::Path::NULL)
++        .is_active(xr_session, hand_source.subaction_path)
+         .unwrap_or(false)
+         && let Ok((location, velocity)) = hand_source.grip_space.relate(reference_space, xr_time)
+     {
+@@ -919,12 +961,19 @@ pub fn get_hand_data(
+ pub fn update_buttons(
+     xr_session: &xr::Session<xr::OpenGlEs>,
+     button_actions: &HashMap<u64, ButtonAction>,
++    subaction_paths: &[xr::Path; 2],
+ ) -> Vec<ButtonEntry> {
+     let mut button_entries = Vec::with_capacity(2);
+     for (id, action) in button_actions {
++        let info = BUTTON_INFO.get(id).unwrap();
++        let subaction_path = if info.device_id == *HAND_RIGHT_ID {
++            subaction_paths[1]
++        } else {
++            subaction_paths[0]
++        };
+         match action {
+             ButtonAction::Binary(action) => {
+-                let Ok(state) = action.state(xr_session, xr::Path::NULL) else {
++                let Ok(state) = action.state(xr_session, subaction_path) else {
+                     continue;
+                 };
+ 
+@@ -936,7 +985,7 @@ pub fn update_buttons(
+                 }
+             }
+             ButtonAction::Scalar(action) => {
+-                let Ok(state) = action.state(xr_session, xr::Path::NULL) else {
++                let Ok(state) = action.state(xr_session, subaction_path) else {
+                     continue;
+                 };
+ 
+diff --git a/alvr/client_openxr/src/stream.rs b/alvr/client_openxr/src/stream.rs
+index 24d77be8..4a1dff64 100644
+--- a/alvr/client_openxr/src/stream.rs
++++ b/alvr/client_openxr/src/stream.rs
+@@ -662,8 +662,11 @@ fn stream_input_loop(
+             body,
+         });
+ 
+-        let button_entries =
+-            interaction::update_buttons(&xr_session, &interaction_ctx.read().button_actions);
++        let button_entries = interaction::update_buttons(
++            &xr_session,
++            &interaction_ctx.read().button_actions,
++            &interaction_ctx.read().button_subaction_paths,
++        );
+         if !button_entries.is_empty() {
+             core_ctx.send_buttons(button_entries);
+         }
+diff --git a/alvr/client_openxr/src/lib.rs b/alvr/client_openxr/src/lib.rs
+index 7870483e..2ae0b0d5 100644
+--- a/alvr/client_openxr/src/lib.rs
++++ b/alvr/client_openxr/src/lib.rs
+@@ -528,13 +539,13 @@ pub fn entry_point() {
+                         amplitude,
+                     } => {
+                         let idx = if device_id == *HAND_LEFT_ID { 0 } else { 1 };
+-                        let action =
+-                            &interaction_context.read().hands_interaction[idx].vibration_action;
++                        let hand = &interaction_context.read().hands_interaction[idx];
++                        let action = &hand.vibration_action;
+ 
+                         action
+                             .apply_feedback(
+                                 &xr_session,
+-                                xr::Path::NULL,
++                                hand.subaction_path,
+                                 &xr::HapticVibration::new()
+                                     .amplitude(amplitude.clamp(0.0, 1.0))
+                                     .frequency(frequency.max(0.0))
