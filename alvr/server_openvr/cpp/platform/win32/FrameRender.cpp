@@ -415,12 +415,19 @@ bool FrameRender::Startup() {
             float gamma;
             float sharpening;
             float _align;
+            float colorMatrixRows[3][4];
         };
         ColorCorrection colorCorrectionStruct = {
             (float)Settings_Instance()->m_renderWidth, (float)Settings_Instance()->m_renderHeight,
             Settings_Instance()->m_brightness,         Settings_Instance()->m_contrast + 1.f,
             Settings_Instance()->m_saturation + 1.f,   Settings_Instance()->m_gamma,
-            Settings_Instance()->m_sharpening
+            Settings_Instance()->m_sharpening,
+            0.f,
+            {
+                { Settings_Instance()->m_colorMatrix[0], Settings_Instance()->m_colorMatrix[1], Settings_Instance()->m_colorMatrix[2], 0.f },
+                { Settings_Instance()->m_colorMatrix[3], Settings_Instance()->m_colorMatrix[4], Settings_Instance()->m_colorMatrix[5], 0.f },
+                { Settings_Instance()->m_colorMatrix[6], Settings_Instance()->m_colorMatrix[7], Settings_Instance()->m_colorMatrix[8], 0.f }
+            }
         };
         ComPtr<ID3D11Buffer> colorCorrectionBuffer
             = CreateBuffer(m_pD3DRender->GetDevice(), colorCorrectionStruct);

@@ -106,6 +106,10 @@ pub fn text(source: &str) -> String {
         "Client-side post-processing" => "客户端后处理".into(),
         "Codec preset" => "编码格式预设".into(),
         "Color correction" => "色彩校正".into(),
+        "Color matrix" => "色彩矩阵".into(),
+        "Row-major 3x3 RGB color matrix, applied before other color corrections" => {
+            "按行优先排列的 3x3 RGB 色彩矩阵，在其他色彩校正前应用".into()
+        }
         "Composite firmware version string" => "组合固件版本".into(),
         "Computed serial number string" => "计算所得序列号".into(),
         "Configuration includes lighthouse20 features bool" => "配置包含 Lighthouse 2.0 功能".into(),

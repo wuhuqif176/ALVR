@@ -112,6 +112,16 @@ fn make_settings(negotiated: Option<&ServerNegotiatedStreamingConfig>) -> Settin
             (false, 0.0, 0.0, 0.0, 0.0, 0.0)
         };
 
+    let color_matrix = if enable_color_correction {
+        video
+            .color_correction
+            .as_option()
+            .map(|config| config.matrix)
+            .unwrap_or([1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0])
+    } else {
+        [1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0]
+    };
+
     // Resolution and refresh rate come from negotiation; fall back to persisted steamvr_hmd_init_config.
     let (render_width, render_height, target_width, target_height, refresh_rate) =
         if let Some(n) = negotiated {
@@ -172,6 +182,7 @@ fn make_settings(negotiated: Option<&ServerNegotiatedStreamingConfig>) -> Settin
         m_saturation: saturation,
         m_gamma: gamma,
         m_sharpening: sharpening,
+        m_colorMatrix: color_matrix,
         m_codec: codec,
         m_h264Profile: h264_profile,
         m_use10bitEncoder: use_10bit_encoder,

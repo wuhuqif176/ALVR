@@ -118,6 +118,7 @@ struct Settings {
     float m_saturation;
     float m_gamma;
     float m_sharpening;
+    float m_colorMatrix[9];
 
     int m_codec;
     int m_h264Profile;

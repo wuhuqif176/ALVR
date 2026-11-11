@@ -169,6 +169,7 @@ pub fn compute_restart_settings_hash(
     let mut saturation = 0.0_f32;
     let mut gamma = 0.0_f32;
     let mut sharpening = 0.0_f32;
+    let mut color_matrix = [1.0_f32, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0];
     let enable_color_correction = if let Switch::Enabled(config) = &settings.video.color_correction
     {
         brightness = config.brightness;
@@ -176,6 +177,7 @@ pub fn compute_restart_settings_hash(
         saturation = config.saturation;
         gamma = config.gamma;
         sharpening = config.sharpening;
+        color_matrix = config.matrix;
         true
     } else {
         false
@@ -260,6 +262,9 @@ pub fn compute_restart_settings_hash(
     saturation.to_bits().hash(&mut h);
     gamma.to_bits().hash(&mut h);
     sharpening.to_bits().hash(&mut h);
+    for value in color_matrix {
+        value.to_bits().hash(&mut h);
+    }
     // Controllers
     controllers_enabled.hash(&mut h);
     controller_is_tracker.hash(&mut h);

@@ -504,6 +504,14 @@ pub struct ColorCorrectionConfig {
     #[schema(gui(slider(min = -1.0, max = 5.0, step = 0.01)))]
     #[schema(flag = "steamvr-restart")]
     pub sharpening: f32,
+
+    #[schema(strings(
+        display_name = "Color matrix",
+        help = "Row-major 3x3 RGB color matrix, applied before other color corrections"
+    ))]
+    #[schema(gui(slider(min = -2.0, max = 2.0, step = 0.001)))]
+    #[schema(flag = "steamvr-restart")]
+    pub matrix: [f32; 9],
 }
 
 #[repr(u8)]
@@ -1913,8 +1921,15 @@ pub fn session_settings_default() -> SettingsDefault {
                     brightness: 0.,
                     contrast: 0.,
                     saturation: 0.5,
-                    gamma: 1.,
+                    gamma: 2.,
                     sharpening: 0.5,
+                    matrix: ArrayDefault {
+                        gui_collapsed: false,
+                        content: [
+                            1.097414, -0.072338, -0.003705, -0.009428, 1.129779, -0.080002,
+                            -0.010870, -0.025471, 1.124181,
+                        ],
+                    },
                 },
             },
         },
